@@ -20,8 +20,8 @@ listening_port = 8081
 # This is used to calculate a cost estimate before a run. It's also used
 # to produce the actual cost during a run. My kiln has three
 # elements that when my switches are set to high, consume 9460 watts.
-kwh_rate        = 0.1319  # cost per kilowatt hour per currency_type to calculate cost to run job
-kw_elements     = 9.460 # if the kiln elements are on, the wattage in kilowatts
+kwh_rate        = 1  # cost per kilowatt hour per currency_type to calculate cost to run job
+kw_elements     = 6.9 # if the kiln elements are on, the wattage in kilowatts
 currency_type   = "$"   # Currency Symbol to show when calculating cost to run job
 
 ########################################################################
@@ -84,11 +84,11 @@ currency_type   = "$"   # Currency Symbol to show when calculating cost to run j
 
 try:
     import board
-    spi_sclk  = board.D17    #spi clock
-    spi_miso  = board.D27    #spi Microcomputer In Serial Out
-    spi_cs    = board.D22    #spi Chip Select
+    spi_sclk  = board.D11    #spi clock
+    spi_miso  = board.D9   #spi Microcomputer In Serial Out
+    spi_cs    = board.D8    #spi Chip Select
     spi_mosi  = board.D10    #spi Microcomputer Out Serial In (not connected) 
-    gpio_heat = board.D23    #output that controls relay
+    gpio_heat = board.D25    #output that controls relay
     gpio_heat_invert = False #invert the output state
 except (NotImplementedError,AttributeError):
     print("not running on blinka recognized board, probably a simulation")
@@ -102,8 +102,8 @@ except (NotImplementedError,AttributeError):
 max31855 = 1
 max31856 = 0
 # uncomment these two lines if using MAX-31856
-import adafruit_max31856
-thermocouple_type = adafruit_max31856.ThermocoupleType.K
+# import adafruit_max31856
+# thermocouple_type = adafruit_max31856.ThermocoupleType.S
 
 # here are the possible max-31856 thermocouple types
 #   ThermocoupleType.B
@@ -140,9 +140,9 @@ sensor_time_wait = 2
 # well with the simulated oven. You must tune them to work well with 
 # your specific kiln. Note that the integral pid_ki is
 # inverted so that a smaller number means more integral action.
-pid_kp = 10   # Proportional 25,200,200
-pid_ki = 80   # Integral
-pid_kd = 220.83497910261562 # Derivative
+pid_kp = 25   # Proportional 25,200,200
+pid_ki = 200   # Integral
+pid_kd = 200 # Derivative
 
 ########################################################################
 #
@@ -176,7 +176,7 @@ sim_speedup_factor = 1
 #
 # If you change the temp_scale, all settings in this file are assumed to
 # be in that scale.
-temp_scale          = "f" # c = Celsius | f = Fahrenheit - Unit to display
+temp_scale          = "c" # c = Celsius | f = Fahrenheit - Unit to display
 time_scale_slope    = "h" # s = Seconds | m = Minutes | h = Hours - Slope displayed in temp_scale per time_scale_slope
 time_scale_profile  = "m" # s = Seconds | m = Minutes | h = Hours - Enter and view target time in time_scale_profile
 
@@ -214,7 +214,7 @@ thermocouple_offset=0
 temperature_average_samples = 10 
 
 # Thermocouple AC frequency filtering - set to True if in a 50Hz locale, else leave at False for 60Hz locale
-ac_freq_50hz = False
+ac_freq_50hz = True
 
 ########################################################################
 # Emergencies - or maybe not
@@ -238,12 +238,12 @@ ignore_tc_cold_junction_temp_low = False
 ignore_tc_temp_high = False
 ignore_tc_temp_low = False
 ignore_tc_voltage_error = False
-ignore_tc_short_errors = False 
+ignore_tc_short_errors = True 
 ignore_tc_unknown_error = False
 
 # This overrides all possible thermocouple errors and prevents the 
 # process from exiting.
-ignore_tc_too_many_errors = False
+ignore_tc_too_many_errors = True
 
 ########################################################################
 # automatic restarts - if you have a power brown-out and the raspberry pi
@@ -277,3 +277,13 @@ kiln_profiles_directory = os.path.abspath(os.path.join(os.path.dirname( __file__
 # To prevent throttling, set throttle_percent to 100.
 throttle_below_temp = 300
 throttle_percent = 20
+
+
+#mqtt config
+mqtt_enable = True
+mqtt_host = 'example.com'
+mqtt_port = 1883
+mqtt_user = 'my_user'
+mqtt_pass = 'my_passwd'
+mqtt_topic = 'kiln/sensor'
+mqtt_kiln_name = 'My Kiln'

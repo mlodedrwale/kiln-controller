@@ -1,6 +1,27 @@
 import threading,logging,json,time,datetime
+import config
+import paho.mqtt.client as mqtt
+import json
+
 from oven import Oven
 log = logging.getLogger(__name__)
+
+# Callback when the client successfully connects to the broker
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        log.info("Connected to MQTT broker")
+    else:
+        log.warning(f"MQTT connection failed, return code: {rc}")
+
+# Callback when the client disconnects from the broker
+def on_disconnect(client, userdata, rc):
+    log.warning(f"Disconnected from MQTT broker (code: {rc}), retrying in 5s...")
+    time.sleep(5)
+    try:
+        client.reconnect()
+    except Exception as e:
+        log.error(f"Reconnection attempt failed: {e}")
+
 
 class OvenWatcher(threading.Thread):
     def __init__(self,oven):
@@ -12,6 +33,8 @@ class OvenWatcher(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self.oven = oven
+        if config.mqtt_enabled:
+            self._setup_mqtt()
         self.start()
 
 # FIXME - need to save runs of schedules in near-real-time
@@ -22,17 +45,47 @@ class OvenWatcher(threading.Thread):
 # out more than N minutes, don't restart
 # FIXME - this should not be done in the Watcher, but in the Oven class
 
+
+    def _setup_mqtt(self):
+        self.client = mqtt.Client()
+        self.client.username_pw_set(config.mqtt_user, config.mqtt_pass)
+        self.client.on_connect = on_connect
+        self.client.on_disconnect = on_disconnect
+        self.client.connect(config.mqtt_host, config.mqtt_port)
+        self.client.loop_start()
+
     def run(self):
+        # Main loop: each iteration handles exceptions internally to stay alive
         while True:
-            oven_state = self.oven.get_state()
-           
-            # record state for any new clients that join
-            if oven_state.get("state") == "RUNNING":
-                self.last_log.append(oven_state)
-            else:
-                self.recording = False
-            self.notify_all(oven_state)
+            try:
+                oven_state = self.oven.get_state()
+
+                # Save state for new observers if the oven is running
+                if oven_state.get("state") == "RUNNING":
+                    self.last_log.append(oven_state)
+                else:
+                    self.recording = False
+
+                # Notify all connected observers via WebSocket
+                self.notify_all(oven_state)
+
+                # Publish temperature to MQTT topic
+                if config.mqtt_enabled:
+                    payload = json.dumps({
+                        "name": config.mqtt_kiln_name,
+                        "value": oven_state['temperature']
+                    })
+                    result = self.client.publish(config.mqtt_topic, payload)
+                    if result.rc != mqtt.MQTT_ERR_SUCCESS:
+                        log.error(f"Publish failed, code: {result.rc}")
+
+            except Exception as exc:
+                log.exception(f"Exception in OvenWatcher iteration: {exc}")
+
+            # Sleep for configured time_step, even after exception
             time.sleep(self.oven.time_step)
+
+
 
     def lastlog_subset(self,maxpts=50):
         '''send about maxpts from lastlog by skipping unwanted data'''

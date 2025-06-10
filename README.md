@@ -68,6 +68,7 @@ Download [Raspberry PI OS](https://www.raspberrypi.org/software/). Use Rasberry 
 
     $ sudo apt-get update
     $ sudo apt-get dist-upgrade
+    $ sudo apt-get install python3-dev 
     $ git clone https://github.com/jbruce12000/kiln-controller
     $ cd kiln-controller
     $ python3 -m venv venv
@@ -85,6 +86,10 @@ If you're done playing around with simulations and want to deploy the code on a 
     select reboot
 
 ## Configuration
+
+Before you begin, make sure to copy the default settings:
+
+	$cp config-default.py config.py
 
 All parameters are defined in config.py. You need to read through config.py carefully to understand each setting. Here are some of the most important settings:
 
