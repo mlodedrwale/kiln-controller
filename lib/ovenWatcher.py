@@ -71,10 +71,8 @@ class OvenWatcher(threading.Thread):
 
                 # Publish temperature to MQTT topic
                 if config.mqtt_enabled:
-                    payload = json.dumps({
-                        "name": config.mqtt_kiln_name,
-                        "value": oven_state['temperature']
-                    })
+                    oven_state["name"] = config.mqtt_kiln_name
+                    payload = json.dumps(oven_state)
                     result = self.client.publish(config.mqtt_topic, payload)
                     if result.rc != mqtt.MQTT_ERR_SUCCESS:
                         log.error(f"Publish failed, code: {result.rc}")
