@@ -49,8 +49,8 @@ class OvenWatcher(threading.Thread):
     def _setup_mqtt(self):
         self.client = mqtt.Client()
         self.client.username_pw_set(config.mqtt_user, config.mqtt_pass)
-        self.client.on_connect = on_connect
-        self.client.on_disconnect = on_disconnect
+        #self.client.on_connect = on_connect
+        #self.client.on_disconnect = on_disconnect
         self.client.connect(config.mqtt_host, config.mqtt_port)
         self.client.loop_start()
 

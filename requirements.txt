@@ -5,7 +5,6 @@ adafruit_circuitpython_max31856==0.12.3
 bottle==0.13.3
 gevent==25.5.1
 gevent_websocket==0.10.1
-matplotlib==3.10.3
 paho_mqtt==2.1.0
 Requests==2.32.4
 websocket_client==1.8.0
